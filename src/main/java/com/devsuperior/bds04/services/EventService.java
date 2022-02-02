@@ -1,6 +1,7 @@
 package com.devsuperior.bds04.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import com.devsuperior.bds04.dto.EventDTO;
 import com.devsuperior.bds04.entities.Event;
 import com.devsuperior.bds04.repositories.CityRepository;
 import com.devsuperior.bds04.repositories.EventRepository;
+import com.devsuperior.bds04.services.exceptions.DatabaseException;
 
 @Service
 public class EventService {
@@ -28,13 +30,19 @@ public class EventService {
 	
 	@Transactional
 	public EventDTO insert(EventDTO dto) {
-		Event event = new Event();
-		event.setName(dto.getName());
-		event.setDate(dto.getDate());
-		event.setUrl(dto.getUrl());
-		event.setCity(repositoryCity.getOne(dto.getCityId()));
-		event = repository.save(event);
-		return new EventDTO(event);
+		try {
+			Event event = new Event();
+			event.setName(dto.getName());
+			event.setDate(dto.getDate());
+			event.setUrl(dto.getUrl());
+			event.setCity(repositoryCity.getOne(dto.getCityId()));
+			event = repository.save(event);
+			return new EventDTO(event);
+		}
+		catch (DataIntegrityViolationException e) {
+			throw new DatabaseException("Integrity violation");
+		}
+
 	}
 
 }
